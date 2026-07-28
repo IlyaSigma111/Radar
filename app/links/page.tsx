@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 
-const FIREBASE_URL = 'https://radar-fdaae-default-rtdb.firebaseio.com'
-
 export default function LinksPage() {
   const [links, setLinks] = useState<string[]>([])
   const [bulkText, setBulkText] = useState('')
@@ -12,13 +10,13 @@ export default function LinksPage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    fetch(`${FIREBASE_URL}/groups.json`)
+    fetch('/api/groups')
       .then(r => r.json())
       .then(data => {
-        if (data && typeof data === 'object') {
+        if (Array.isArray(data)) {
           const seen = new Set<string>()
           const unique: string[] = []
-          for (const link of Object.values(data) as string[]) {
+          for (const link of data) {
             try {
               const u = new URL(link)
               const parts = u.pathname.split('/').filter(Boolean)
@@ -152,7 +150,10 @@ export default function LinksPage() {
   return (
     <main className="links-page">
       <div className="links-container">
-        <a href="/" className="back-link">← Назад к радару</a>
+        <div className="back-link" style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
+          <a href="/" style={{ color: '#4169e1', textDecoration: 'none', fontSize: 14 }}>← Назад к радару</a>
+          <a href="/test/links" style={{ color: '#f59e0b', textDecoration: 'none', fontSize: 14 }}>ТЕСТ-версия →</a>
+        </div>
 
         <h1 className="links-title">Добавить группу</h1>
         <p className="links-desc">

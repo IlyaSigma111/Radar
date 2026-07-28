@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import * as db from '../../lib/db'
+import * as db from '@/app/lib/db-test'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()

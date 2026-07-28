@@ -5,3 +5,8 @@ out/
 *.log
 .vercel
 .env*.local
+.env
+data/
+release/
+VK-Radar-Setup.exe
+LICENSE.txt
