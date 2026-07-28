@@ -1,199 +1,348 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VK Radar - Сканер VK</title>
+  <title>VK Radar</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0a0a0f;
-      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #0c0f14;
+      color: #c0c4cc;
+      line-height: 1.6;
       min-height: 100vh;
-      overflow-x: hidden;
     }
-    .bg-radar {
-      position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 800px; height: 800px;
-      opacity: 0.08;
+
+    a { color: #4f8eff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 100px 0 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -160px;
+      left: 50%;
+      width: 600px;
+      height: 600px;
+      transform: translateX(-50%);
       border-radius: 50%;
-      background: conic-gradient(from 0deg, transparent 0deg, #00ff88 30deg, transparent 60deg);
-      animation: radarSpin 4s linear infinite;
+      background: radial-gradient(circle, rgba(79,142,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      animation: pulse 6s ease-in-out infinite;
     }
-    @keyframes radarSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
-    .container { max-width: 900px; margin: 0 auto; padding: 60px 20px; position: relative; z-index: 1; }
-    .badge {
-      display: inline-block; background: #1a1a2e; border: 1px solid #00ff88;
-      color: #00ff88; padding: 6px 16px; border-radius: 20px;
-      font-size: 13px; font-weight: 600; letter-spacing: 1px;
-      text-transform: uppercase; margin-bottom: 30px;
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+      50% { opacity: .6; transform: translateX(-50%) scale(1.08); }
     }
-    h1 {
-      font-size: 56px; font-weight: 800; line-height: 1.1;
-      background: linear-gradient(135deg, #00ff88, #00cc6a, #00ff88);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      margin-bottom: 20px;
+
+    .hero h1 {
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      color: #fff;
+      position: relative;
     }
-    .subtitle { font-size: 20px; color: #888; line-height: 1.6; margin-bottom: 40px; }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #4f8eff, #8ab4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero .subtitle {
+      font-size: 18px;
+      color: #6b7280;
+      margin: 20px auto 40px;
+      max-width: 480px;
+      position: relative;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+      border: none;
+    }
+
+    .btn:hover { text-decoration: none; }
+
+    .btn-primary {
+      background: #4f8eff;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #3a75e0; }
+
+    .btn-ghost {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px solid #1f2937;
+    }
+    .btn-ghost:hover { border-color: #374151; color: #d1d5db; }
+
+    /* ── Features ── */
     .features {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px; margin: 40px 0;
+      padding: 60px 0;
     }
-    .feature {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px; padding: 28px; transition: all 0.3s;
+
+    .features h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 40px;
     }
-    .feature:hover {
-      border-color: #00ff88; background: rgba(0,255,136,0.03);
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: #111621;
+      border: 1px solid #1c2333;
+      border-radius: 14px;
+      padding: 32px;
+      transition: border-color .25s, transform .25s;
+    }
+
+    .card:hover {
+      border-color: #4f8eff44;
       transform: translateY(-2px);
     }
-    .feature-icon { font-size: 32px; margin-bottom: 14px; }
-    .feature h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #fff; }
-    .feature p { font-size: 14px; color: #777; line-height: 1.5; }
-    .cta {
-      display: flex; gap: 16px; margin: 50px 0; flex-wrap: wrap;
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #4f8eff18;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      color: #4f8eff;
     }
-    .btn {
-      display: inline-flex; align-items: center; gap: 10px;
-      padding: 16px 32px; border-radius: 12px; font-size: 16px;
-      font-weight: 700; text-decoration: none; transition: all 0.3s;
-      cursor: pointer; border: none;
+
+    .card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
     }
-    .btn-primary {
-      background: linear-gradient(135deg, #00ff88, #00cc6a);
-      color: #000;
+
+    .card p {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.65;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,255,136,0.3); }
-    .btn-secondary {
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
-      color: #ccc;
+
+    /* ── How it works ── */
+    .how {
+      padding: 60px 0 80px;
     }
-    .btn-secondary:hover { border-color: #00ff88; color: #fff; }
-    .screenshot {
-      margin: 50px 0; border-radius: 16px; overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.02);
-      padding: 40px; text-align: center;
+
+    .how h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 40px;
     }
-    .screenshot-placeholder {
-      width: 100%; height: 300px;
-      background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,204,106,0.05));
-      border-radius: 12px; display: flex; align-items: center;
-      justify-content: center; font-size: 18px; color: #555;
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
-    .how { margin: 60px 0; }
-    .how h2 { font-size: 32px; font-weight: 800; margin-bottom: 30px; color: #fff; }
-    .steps { display: flex; flex-direction: column; gap: 20px; }
+
     .step {
-      display: flex; gap: 20px; align-items: flex-start;
-      background: rgba(255,255,255,0.03); border-radius: 12px; padding: 24px;
+      background: #111621;
+      border: 1px solid #1c2333;
+      border-radius: 14px;
+      padding: 32px 28px;
+      text-align: center;
     }
+
     .step-num {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: rgba(0,255,136,0.15); color: #00ff88;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 16px; flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #4f8eff18;
+      color: #4f8eff;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 18px;
     }
-    .step-content h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #fff; }
-    .step-content p { font-size: 14px; color: #777; line-height: 1.5; }
-    code {
-      background: rgba(0,255,136,0.1); color: #00ff88;
-      padding: 2px 8px; border-radius: 4px; font-size: 13px;
+
+    .step h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
     }
+
+    .step p {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.65;
+    }
+
+    .step code {
+      display: inline-block;
+      margin-top: 10px;
+      background: #0c0f14;
+      border: 1px solid #1c2333;
+      color: #4f8eff;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    }
+
+    /* ── Footer ── */
     footer {
-      margin-top: 80px; padding: 30px 0; border-top: 1px solid rgba(255,255,255,0.06);
-      text-align: center; font-size: 13px; color: #444;
+      padding: 32px 0;
+      border-top: 1px solid #1c2333;
+      text-align: center;
+      font-size: 13px;
+      color: #374151;
     }
-    footer a { color: #00ff88; text-decoration: none; }
+
+    footer a { color: #4f8eff88; }
+    footer a:hover { color: #4f8eff; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hero { padding: 70px 0 50px; }
+      .hero h1 { font-size: 40px; }
+      .hero .subtitle { font-size: 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="bg-radar"></div>
-  <div class="container">
-    <div class="badge">v1.0.0</div>
-    <h1>VK Radar</h1>
-    <p class="subtitle">
-      Локальный сканер VK с веб-интерфейсом-радаром.<br>
-      Сканирует сообщества, фильтрует спам, показывает посты в реальном времени.
-    </p>
 
-    <div class="cta">
-      <a href="https://github.com/ilyasigma111/radar/releases/latest/download/VK-Radar-Setup.exe" class="btn btn-primary">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Скачать установщик
-      </a>
-      <a href="https://github.com/ilyasigma111/radar" class="btn btn-secondary">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
-        GitHub
-      </a>
-    </div>
-
-    <div class="screenshot">
-      <div class="screenshot-placeholder">Radarm</div>
-    </div>
-
-    <div class="features">
-      <div class="feature">
-        <div class="feature-icon">Radar</div>
-        <h3>Радар-интерфейс</h3>
-        <p>Посты отображаются как объекты на радаре. Визуализация в реальном времени.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">Filter</div>
-        <h3>Фильтр спама</h3>
-        <p>50+ паттернов для фильтрации рекламы, ботов и мусора. Настраиваемые правила.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">Local</div>
-        <h3>Всё локально</h3>
-        <p>Данные хранятся на вашем диске. Внешних серверов нет. Полная приватность.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">Fast</div>
-        <h3>Адаптивный rate limit</h3>
-        <p>Автоматическая оптимизация задержек. Не превышает лимиты VK API.</p>
+  <section class="hero">
+    <div class="container">
+      <h1><span>VK Radar</span></h1>
+      <p class="subtitle">VK community scanner with radar UI</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/IlyaSigma111/Radar/releases/latest/download/VK-Radar-Setup.exe" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+        <a href="https://github.com/IlyaSigma111/Radar" class="btn btn-ghost">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
       </div>
     </div>
+  </section>
 
-    <div class="how">
-      <h2>Как установить</h2>
+  <section class="features">
+    <div class="container">
+      <h2>Features</h2>
+      <div class="features-grid">
+        <div class="card">
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+          </div>
+          <h3>Spam Filtering</h3>
+          <p>50+ built-in patterns automatically detect and filter ads, bots, and junk across every community you scan.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <h3>Rich Metadata</h3>
+          <p>Comments, views, and reposts displayed on every card so you can assess engagement at a glance.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          </div>
+          <h3>Local Storage</h3>
+          <p>All data lives on your disk. No external servers, no telemetry. Full privacy, full control.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>Adaptive Rate Limit</h3>
+          <p>Automatically adjusts request intervals to stay within VK API limits without manual tuning.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how">
+    <div class="container">
+      <h2>How It Works</h2>
       <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
-          <div class="step-content">
-            <h3>Скачайте установщик</h3>
-            <p>Нажмите кнопку "Скачать установщик" выше. Файл ~100 МБ, включает Node.js.</p>
-          </div>
+          <h3>Install</h3>
+          <p>Download and run the installer.</p>
+          <code>VK-Radar-Setup.exe</code>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <div class="step-content">
-            <h3>Запустите установку</h3>
-            <p>Запустите <code>VK-Radar-Setup.exe</code>. Выберите папку установки.</p>
-          </div>
+          <h3>Configure</h3>
+          <p>Add your VK token to the environment file.</p>
+          <code>.env</code>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <div class="step-content">
-            <h3>Укажите токен VK</h3>
-            <p>Отредактируйте файл <code>.env</code> в папке установки. Вставьте ваш VK Service Token.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-content">
-            <h3>Запустите</h3>
-            <p>Запустите <code>VK Radar.bat</code> или ярлык на рабочем столе. Откройте <code>localhost:3000/test</code>.</p>
-          </div>
+          <h3>Run</h3>
+          <p>Start the scanner and the web UI.</p>
+          <code>node test-scanner.js + npx next dev</code>
         </div>
       </div>
     </div>
+  </section>
 
-    <footer>
-      VK Radar v1.0.0 &middot; <a href="https://github.com/ilyasigma111/radar">GitHub</a>
-    </footer>
-  </div>
+  <footer>
+    <div class="container">
+      VK Radar v1.0.0 &middot; <a href="https://github.com/IlyaSigma111/Radar">GitHub</a>
+    </div>
+  </footer>
+
 </body>
 </html>
