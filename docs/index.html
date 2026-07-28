@@ -1,348 +1,461 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VK Radar</title>
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VK Radar — Мониторинг ВКонтакте</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%234169e1' stroke-width='8'/><circle cx='50' cy='50' r='8' fill='%234169e1'/></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:#060e1a;color:#e0e8f0;overflow-x:hidden}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #0c0f14;
-      color: #c0c4cc;
-      line-height: 1.6;
-      min-height: 100vh;
-    }
+/* === INTRO CUTSCENE === */
+.intro{position:fixed;inset:0;z-index:100;background:#060e1a;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity 0.8s ease,visibility 0.8s ease}
+.intro.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.intro-radar{position:absolute;border-radius:50%;border:1px solid rgba(65,105,225,0.06)}
+.intro-radar:nth-child(1){width:20vmin;height:20vmin}
+.intro-radar:nth-child(2){width:40vmin;height:40vmin}
+.intro-radar:nth-child(3){width:60vmin;height:60vmin}
+.intro-radar:nth-child(4){width:80vmin;height:80vmin;border-color:rgba(65,105,225,0.12)}
+.intro-line{position:absolute;background:rgba(65,105,225,0.04)}
+.intro-line.h{top:50%;left:5%;right:5%;height:1px}
+.intro-line.v{left:50%;top:5%;bottom:5%;width:1px}
+.intro-sweep{position:absolute;width:80vmin;height:80vmin;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,rgba(65,105,225,0.15) 10deg,rgba(65,105,225,0.08) 30deg,rgba(65,105,225,0.03) 50deg,transparent 80deg);animation:sweepIn 2.5s ease-out forwards;opacity:0}
+@keyframes sweepIn{0%{transform:rotate(0deg);opacity:0}20%{opacity:1}100%{transform:rotate(360deg);opacity:0}}
+.intro-blinks{position:absolute;width:80vmin;height:80vmin;border-radius:50%}
+.intro-blink{position:absolute;width:4px;height:4px;background:#4169e1;border-radius:50%;box-shadow:0 0 8px #4169e1;opacity:0}
+.intro-blink:nth-child(1){top:30%;left:50%;animation:blinkDot 0.8s 1.5s forwards}
+.intro-blink:nth-child(2){top:60%;left:35%;animation:blinkDot 0.8s 1.8s forwards}
+.intro-blink:nth-child(3){top:45%;left:70%;animation:blinkDot 0.8s 2.1s forwards}
+.intro-blink:nth-child(4){top:75%;left:55%;animation:blinkDot 0.8s 2.4s forwards}
+.intro-blink:nth-child(5){top:25%;left:25%;animation:blinkDot 0.8s 2.0s forwards}
+.intro-blink:nth-child(6){top:65%;left:80%;animation:blinkDot 0.8s 2.3s forwards}
+@keyframes blinkDot{0%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1.5)}100%{opacity:0.6;transform:scale(1)}}
+.intro-text{position:relative;z-index:2;text-align:center}
+.intro-logo{margin:0 auto 24px;width:72px;height:72px;border:2px solid rgba(65,105,225,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;animation:fadeInUp 0.6s 0.5s forwards}
+.intro-logo svg{width:40px;height:40px}
+.intro-title{font-size:56px;font-weight:900;letter-spacing:16px;text-transform:uppercase;background:linear-gradient(135deg,#4169e1 0%,#7c8cf0 50%,#4169e1 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:0;animation:fadeInUp 0.6s 0.8s forwards}
+.intro-tagline{font-size:16px;color:#5a7a90;letter-spacing:4px;text-transform:uppercase;margin-top:8px;opacity:0;animation:fadeInUp 0.6s 1.1s forwards}
+.intro-scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#4169e1,transparent);opacity:0;animation:scanlineDown 2s 0.3s ease-out forwards}
+@keyframes scanlineDown{0%{top:-2px;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+@keyframes fadeInUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
+.intro-skip{position:fixed;bottom:32px;z-index:101;left:50%;transform:translateX(-50%);background:none;border:1px solid rgba(65,105,225,0.2);color:#5a7a90;padding:8px 20px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;transition:all 0.2s;opacity:0;animation:fadeInUp 0.6s 2.5s forwards}
+.intro-skip:hover{border-color:rgba(65,105,225,0.4);color:#e0e8f0}
 
-    a { color: #4f8eff; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+/* === MAIN PAGE === */
+.main-content{opacity:0;transition:opacity 0.8s ease}
+.main-content.visible{opacity:1}
 
-    .container {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
+.radar-bg{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:0;display:flex;align-items:center;justify-content:center}
+.radar-bg .ring{position:absolute;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border:1px solid rgba(65,105,225,0.06)}
+.radar-bg .ring:nth-child(1){width:25%;height:25%}
+.radar-bg .ring:nth-child(2){width:50%;height:50%}
+.radar-bg .ring:nth-child(3){width:75%;height:75%}
+.radar-bg .ring:nth-child(4){width:100%;height:100%;border-color:rgba(65,105,225,0.1)}
+.radar-line{position:absolute;background:rgba(65,105,225,0.04)}
+.radar-line.h{top:50%;left:0;right:0;height:1px}
+.radar-line.v{left:50%;top:0;bottom:0;width:1px}
+.radar-sweep{position:absolute;top:0;left:0;right:0;bottom:0;background:conic-gradient(from 0deg,transparent 0deg,rgba(65,105,225,0.08) 10deg,rgba(65,105,225,0.04) 30deg,rgba(65,105,225,0.01) 50deg,transparent 80deg 360deg);border-radius:50%;animation:sweep 8s linear infinite}
+@keyframes sweep{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:hidden}
+.particle{position:absolute;width:3px;height:3px;background:#4169e1;border-radius:50%;animation:float linear infinite;opacity:0.3}
+@keyframes float{0%{transform:translateY(100vh) translateX(0);opacity:0}10%{opacity:0.5}90%{opacity:0.5}100%{transform:translateY(-10vh) translateX(40px);opacity:0}}
 
-    /* ── Hero ── */
-    .hero {
-      padding: 100px 0 80px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
+.container{position:relative;z-index:2;max-width:960px;margin:0 auto;padding:0 24px}
 
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -160px;
-      left: 50%;
-      width: 600px;
-      height: 600px;
-      transform: translateX(-50%);
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(79,142,255,0.12) 0%, transparent 70%);
-      pointer-events: none;
-      animation: pulse 6s ease-in-out infinite;
-    }
+/* Hero */
+header{text-align:center;padding:100px 0 48px;position:relative}
+.logo{width:64px;height:64px;margin:0 auto 24px;border:2px solid rgba(65,105,225,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.logo svg{width:36px;height:36px}
+header h1{font-size:48px;font-weight:900;background:linear-gradient(135deg,#4169e1 0%,#7c8cf0 50%,#4169e1 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:12px;text-transform:uppercase;margin-bottom:16px}
+header p{font-size:18px;color:#7a8ba8;line-height:1.7;max-width:640px;margin:0 auto}
+.badge{display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;padding:6px 16px;border:1px solid rgba(65,105,225,0.3);border-radius:20px;background:rgba(65,105,225,0.08);color:#7a8ba8;font-size:13px;font-weight:500}
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-      50% { opacity: .6; transform: translateX(-50%) scale(1.08); }
-    }
+/* Screenshot carousel */
+.screenshot-section{margin:60px auto;max-width:860px}
+.screenshot-frame{background:#0d1f3c;border:1px solid rgba(65,105,225,0.15);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.screenshot-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:rgba(65,105,225,0.06);border-bottom:1px solid rgba(65,105,225,0.1)}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.r{background:#ef4444}
+.dot.y{background:#eab308}
+.dot.g{background:#22c55e}
+.screenshot-title{font-size:13px;font-weight:700;color:#4169e1;letter-spacing:6px;text-transform:uppercase;margin-left:auto}
+.screenshot-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;padding:20px}
+.screenshot-card{background:rgba(13,31,60,0.6);border:1px solid rgba(65,105,225,0.1);border-radius:12px;padding:16px}
+.screenshot-card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.screenshot-card-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4169e1,#1e40af)}
+.screenshot-card-name{width:100px;height:10px;background:rgba(255,255,255,0.07);border-radius:4px}
+.screenshot-card-time{width:60px;height:8px;background:rgba(255,255,255,0.04);border-radius:4px;margin-left:auto}
+.screenshot-card-text{width:100%;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;margin-bottom:8px}
+.screenshot-card-text.s{width:70%}
+.screenshot-card-img{width:100%;height:80px;background:linear-gradient(135deg,rgba(65,105,225,0.1),rgba(65,105,225,0.05));border-radius:8px;margin-top:10px}
+.screenshot-card-footer{display:flex;gap:16px;margin-top:12px}
+.screenshot-card-action{width:20px;height:10px;background:rgba(255,255,255,0.03);border-radius:4px}
+.screenshot-caption{text-align:center;margin-top:16px;color:#5a7a80;font-size:14px}
 
-    .hero h1 {
-      font-size: 64px;
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      line-height: 1.1;
-      color: #fff;
-      position: relative;
-    }
+/* Features */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin:80px 0}
+.feature{background:rgba(13,31,60,0.5);border:1px solid rgba(65,105,225,0.1);border-radius:16px;padding:28px;transition:all 0.3s ease;cursor:default;backdrop-filter:blur(4px)}
+.feature:hover{border-color:rgba(65,105,225,0.25);box-shadow:0 8px 32px rgba(65,105,225,0.06);transform:translateY(-2px)}
+.feature-icon{width:44px;height:44px;border-radius:12px;background:rgba(65,105,225,0.1);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:#4169e1}
+.feature h3{font-size:16px;font-weight:700;color:#e0e8f0;margin-bottom:8px}
+.feature p{font-size:14px;color:#7a8ba8;line-height:1.6}
 
-    .hero h1 span {
-      background: linear-gradient(135deg, #4f8eff, #8ab4ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+/* Instructions */
+.instructions{background:rgba(13,31,60,0.3);border:1px solid rgba(65,105,225,0.1);border-radius:24px;padding:48px 36px;margin:80px 0}
+.instructions h2{font-size:24px;font-weight:800;text-align:center;margin-bottom:32px;letter-spacing:2px}
+.instructions h2 span{background:linear-gradient(135deg,#4169e1,#7c8cf0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.steps{display:flex;flex-direction:column;gap:0;max-width:600px;margin:0 auto}
+.step{display:flex;gap:16px;padding:20px 0;border-bottom:1px solid rgba(65,105,225,0.06)}
+.step:last-child{border-bottom:none}
+.step-num{width:36px;height:36px;border-radius:50%;background:rgba(65,105,225,0.12);border:1px solid rgba(65,105,225,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#4169e1;flex-shrink:0}
+.step-body h4{font-size:15px;font-weight:600;color:#e0e8f0;margin-bottom:4px}
+.step-body p{font-size:13px;color:#6a8a9a;line-height:1.5}
 
-    .hero .subtitle {
-      font-size: 18px;
-      color: #6b7280;
-      margin: 20px auto 40px;
-      max-width: 480px;
-      position: relative;
-    }
+/* FAQ */
+.faq{margin:80px 0}
+.faq h2{font-size:24px;font-weight:800;text-align:center;margin-bottom:32px;letter-spacing:2px}
+.faq h2 span{background:linear-gradient(135deg,#4169e1,#7c8cf0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.faq-list{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.faq-item{border:1px solid rgba(65,105,225,0.08);border-radius:12px;overflow:hidden;transition:border-color 0.2s}
+.faq-item:hover{border-color:rgba(65,105,225,0.18)}
+.faq-q{width:100%;background:rgba(13,31,60,0.3);border:none;color:#c0d0e0;font-family:inherit;font-size:14px;font-weight:600;padding:16px 20px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:color 0.2s}
+.faq-q:hover{color:#e0e8f0}
+.faq-q svg{width:16px;height:16px;transition:transform 0.3s;flex-shrink:0;color:#5a7a90}
+.faq-item.open .faq-q svg{transform:rotate(180deg)}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:all 0.3s ease;font-size:13px;color:#6a8a9a;line-height:1.6}
+.faq-item.open .faq-a{padding:0 20px 16px;max-height:300px}
 
-    .hero-buttons {
-      display: flex;
-      gap: 14px;
-      justify-content: center;
-      flex-wrap: wrap;
-      position: relative;
-    }
+/* Download */
+.download-section{text-align:center;margin:80px 0;padding:56px 32px;background:radial-gradient(ellipse at center,rgba(65,105,225,0.06) 0%,transparent 70%);border:1px solid rgba(65,105,225,0.1);border-radius:24px}
+.download-section h2{font-size:28px;font-weight:800;margin-bottom:8px}
+.download-section .sub{color:#7a8ba8;font-size:15px;margin-bottom:32px}
+.buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;transition:all 0.25s ease;cursor:pointer;border:none;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,#4169e1,#1e40af);color:#fff;box-shadow:0 4px 16px rgba(65,105,225,0.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(65,105,225,0.4)}
+.btn-secondary{background:rgba(65,105,225,0.08);color:#7a8ba8;border:1px solid rgba(65,105,225,0.2)}
+.btn-secondary:hover{background:rgba(65,105,225,0.15);border-color:rgba(65,105,225,0.35);transform:translateY(-2px)}
+.btn svg{width:20px;height:20px;flex-shrink:0}
+.version-info{margin-top:16px;font-size:13px;color:#4a6a80}
+.version-info a{color:#4169e1;text-decoration:none}
+.version-info a:hover{text-decoration:underline}
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .2s;
-      text-decoration: none;
-      border: none;
-    }
+/* Footer */
+footer{text-align:center;padding:32px 0 48px;color:#3a4a60;font-size:13px}
+footer a{color:#5a7a90;text-decoration:none}
+footer a:hover{color:#4169e1}
 
-    .btn:hover { text-decoration: none; }
+/* Scroll reveal */
+.reveal{opacity:0;transform:translateY(30px);transition:all 0.6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
 
-    .btn-primary {
-      background: #4f8eff;
-      color: #fff;
-    }
-    .btn-primary:hover { background: #3a75e0; }
+/* Mobile */
+@media(max-width:768px){
+  .intro-title{font-size:28px;letter-spacing:8px}
+  header h1{font-size:28px;letter-spacing:8px}
+  header{padding:60px 0 32px}
+  header p{font-size:16px}
+  .features{grid-template-columns:1fr;gap:16px}
+  .screenshot-body{grid-template-columns:1fr;gap:12px}
+  .buttons{flex-direction:column;align-items:center}
+  .btn{width:100%;max-width:320px;justify-content:center}
+  .download-section{padding:40px 20px}
+  .instructions{padding:32px 20px}
+  .intro-skip{bottom:16px;font-size:12px;padding:6px 16px}
+}
 
-    .btn-ghost {
-      background: transparent;
-      color: #9ca3af;
-      border: 1px solid #1f2937;
-    }
-    .btn-ghost:hover { border-color: #374151; color: #d1d5db; }
-
-    /* ── Features ── */
-    .features {
-      padding: 60px 0;
-    }
-
-    .features h2 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .card {
-      background: #111621;
-      border: 1px solid #1c2333;
-      border-radius: 14px;
-      padding: 32px;
-      transition: border-color .25s, transform .25s;
-    }
-
-    .card:hover {
-      border-color: #4f8eff44;
-      transform: translateY(-2px);
-    }
-
-    .card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: #4f8eff18;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 18px;
-      color: #4f8eff;
-    }
-
-    .card h3 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .card p {
-      font-size: 14px;
-      color: #6b7280;
-      line-height: 1.65;
-    }
-
-    /* ── How it works ── */
-    .how {
-      padding: 60px 0 80px;
-    }
-
-    .how h2 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .step {
-      background: #111621;
-      border: 1px solid #1c2333;
-      border-radius: 14px;
-      padding: 32px 28px;
-      text-align: center;
-    }
-
-    .step-num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #4f8eff18;
-      color: #4f8eff;
-      font-weight: 700;
-      font-size: 16px;
-      margin-bottom: 18px;
-    }
-
-    .step h3 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .step p {
-      font-size: 14px;
-      color: #6b7280;
-      line-height: 1.65;
-    }
-
-    .step code {
-      display: inline-block;
-      margin-top: 10px;
-      background: #0c0f14;
-      border: 1px solid #1c2333;
-      color: #4f8eff;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
-    }
-
-    /* ── Footer ── */
-    footer {
-      padding: 32px 0;
-      border-top: 1px solid #1c2333;
-      text-align: center;
-      font-size: 13px;
-      color: #374151;
-    }
-
-    footer a { color: #4f8eff88; }
-    footer a:hover { color: #4f8eff; }
-
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-      .hero { padding: 70px 0 50px; }
-      .hero h1 { font-size: 40px; }
-      .hero .subtitle { font-size: 16px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .steps { grid-template-columns: 1fr; }
-    }
-  </style>
+@media(prefers-reduced-motion:reduce){
+  .radar-sweep,.intro-sweep,.particle,.intro-blink{animation:none!important}
+  .particle{display:none}
+  .intro{display:none}
+  .main-content{opacity:1}
+}
+</style>
 </head>
 <body>
 
-  <section class="hero">
-    <div class="container">
-      <h1><span>VK Radar</span></h1>
-      <p class="subtitle">VK community scanner with radar UI</p>
-      <div class="hero-buttons">
-        <a href="https://github.com/IlyaSigma111/Radar/releases/latest/download/VK-Radar-Setup.exe" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download
-        </a>
-        <a href="https://github.com/IlyaSigma111/Radar" class="btn btn-ghost">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          GitHub
-        </a>
-      </div>
+<!-- === INTRO CUTSCENE === -->
+<div class="intro" id="intro">
+  <div class="intro-radar"></div>
+  <div class="intro-radar"></div>
+  <div class="intro-radar"></div>
+  <div class="intro-radar"></div>
+  <div class="intro-line h"></div>
+  <div class="intro-line v"></div>
+  <div class="intro-sweep"></div>
+  <div class="intro-scanline"></div>
+  <div class="intro-blinks">
+    <div class="intro-blink"></div>
+    <div class="intro-blink"></div>
+    <div class="intro-blink"></div>
+    <div class="intro-blink"></div>
+    <div class="intro-blink"></div>
+    <div class="intro-blink"></div>
+  </div>
+  <div class="intro-text">
+    <div class="intro-logo">
+      <svg viewBox="0 0 100 100" fill="none" stroke="#4169e1" stroke-width="6">
+        <circle cx="50" cy="50" r="40"/>
+        <circle cx="50" cy="50" r="6" fill="#4169e1"/>
+        <line x1="50" y1="10" x2="50" y2="90"/>
+        <line x1="10" y1="50" x2="90" y2="50"/>
+      </svg>
     </div>
-  </section>
+    <div class="intro-title">VK Radar</div>
+    <div class="intro-tagline">Парсер ВКонтакте</div>
+  </div>
+  <button class="intro-skip" id="skipIntro">Пропустить →</button>
+</div>
 
-  <section class="features">
-    <div class="container">
-      <h2>Features</h2>
-      <div class="features-grid">
-        <div class="card">
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
-          </div>
-          <h3>Spam Filtering</h3>
-          <p>50+ built-in patterns automatically detect and filter ads, bots, and junk across every community you scan.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <h3>Rich Metadata</h3>
-          <p>Comments, views, and reposts displayed on every card so you can assess engagement at a glance.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-          </div>
-          <h3>Local Storage</h3>
-          <p>All data lives on your disk. No external servers, no telemetry. Full privacy, full control.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <h3>Adaptive Rate Limit</h3>
-          <p>Automatically adjusts request intervals to stay within VK API limits without manual tuning.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- === MAIN === -->
+<div class="main-content" id="mainContent">
+<div class="radar-bg">
+  <div class="ring"></div>
+  <div class="ring"></div>
+  <div class="ring"></div>
+  <div class="ring"></div>
+  <div class="radar-line h"></div>
+  <div class="radar-line v"></div>
+  <div class="radar-sweep"></div>
+</div>
+<div class="particles" id="particles"></div>
 
-  <section class="how">
-    <div class="container">
-      <h2>How It Works</h2>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <h3>Install</h3>
-          <p>Download and run the installer.</p>
-          <code>VK-Radar-Setup.exe</code>
+<div class="container">
+
+  <!-- Hero -->
+  <header class="reveal">
+    <div class="badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Версия 1.0.4 — исправлен импорт, работают ссылки VK
+    </div>
+    <h1>VK Radar</h1>
+    <p>Десктопное приложение для мониторинга групп ВКонтакте. Автосканирование, поиск, уведомления. Всё в одном .exe файле.</p>
+  </header>
+
+  <!-- Screenshot -->
+  <div class="screenshot-section reveal">
+    <div class="screenshot-frame">
+      <div class="screenshot-header">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+        <div class="screenshot-title">РАДАР</div>
+      </div>
+      <div class="screenshot-body">
+        <div class="screenshot-card">
+          <div class="screenshot-card-header"><div class="screenshot-card-avatar"></div><div class="screenshot-card-name"></div><div class="screenshot-card-time"></div></div>
+          <div class="screenshot-card-text"></div><div class="screenshot-card-text s"></div>
+          <div class="screenshot-card-img"></div>
+          <div class="screenshot-card-footer"><div class="screenshot-card-action"></div><div class="screenshot-card-action"></div></div>
         </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <h3>Configure</h3>
-          <p>Add your VK token to the environment file.</p>
-          <code>.env</code>
+        <div class="screenshot-card">
+          <div class="screenshot-card-header"><div class="screenshot-card-avatar"></div><div class="screenshot-card-name"></div><div class="screenshot-card-time"></div></div>
+          <div class="screenshot-card-text"></div><div class="screenshot-card-text s"></div>
+          <div class="screenshot-card-img"></div>
+          <div class="screenshot-card-footer"><div class="screenshot-card-action"></div><div class="screenshot-card-action"></div></div>
         </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <h3>Run</h3>
-          <p>Start the scanner and the web UI.</p>
-          <code>node test-scanner.js + npx next dev</code>
+        <div class="screenshot-card">
+          <div class="screenshot-card-header"><div class="screenshot-card-avatar"></div><div class="screenshot-card-name"></div><div class="screenshot-card-time"></div></div>
+          <div class="screenshot-card-text"></div><div class="screenshot-card-text s"></div>
+          <div class="screenshot-card-img"></div>
+          <div class="screenshot-card-footer"><div class="screenshot-card-action"></div><div class="screenshot-card-action"></div></div>
         </div>
       </div>
     </div>
-  </section>
+    <div class="screenshot-caption">Посты на радаре — перетаскивание, сонар, 14 тем оформления</div>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="feature reveal">
+      <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <h3>Автосканирование</h3>
+      <p>Автоматически проверяет все добавленные группы. Rate limiter встроен — VK API не блокирует.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+      <h3>Своё окно</h3>
+      <p>Полноценное десктопное приложение на Tauri v2. Не браузер, не Electron — компактный нативный .exe.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+      <h3>Один файл</h3>
+      <p>Всё в одном бинарнике: интерфейс, API-сервер на Axum, сканер VK. Никаких БД или Docker.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <h3>Приватность</h3>
+      <p>Данные хранятся только у вас. Никаких серверов, никакой телеметрии. Всё работает локально.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <h3>Радар-интерфейс</h3>
+      <p>Посты отображаются на анимированном радаре. Сонар, перетаскивание, 14 тем, частицы и небула-эффекты.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <h3>Гибкий импорт</h3>
+      <p>Загружайте список групп из .txt/.csv. Экспорт групп по периодам: сегодня, неделя, всё время.</p>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div class="instructions reveal">
+    <h2><span>Как начать</span></h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Скачайте</h4>
+          <p>Нажмите «Скачать .exe» или «Установщик». Файл ~19 МБ, ничего дополнительно ставить не нужно.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Запустите</h4>
+          <p>Откройте radar.exe. При первом запуске появится окно с радаром — сканирование начнётся автоматически.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Добавьте группы</h4>
+          <p>Откройте боковую панель (шестерёнка). Введите ссылку на группу ВК или импортируйте список из .txt/.csv.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Смотрите посты</h4>
+          <p>Посты появятся на радаре. Перетаскивайте, включайте сонар (пробел), меняйте темы — всё в реальном времени.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq reveal">
+    <h2><span>Частые вопросы</span></h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q">Что такое VK Radar? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="faq-a">Десктопное приложение для мониторинга постов из групп ВКонтакте. Отображает посты на анимированном радаре, автоматически обновляется, поддерживает уведомления.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Нужен ли VK API токен? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="faq-a">Встроен по умолчанию. Просто скачайте и запустите — всё работает из коробки.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Сколько групп можно добавить? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="faq-a">Ограничений нет. Сканер обрабатывает группы последовательно с rate limiter'ом (~3 запроса/сек), так что большое количество групп потребует больше времени.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Где хранятся данные? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="faq-a">В памяти приложения и JSON-файлах в папке ~/.radar/. Никаких внешних серверов или баз данных.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Почему так мало весит? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="faq-a">VK Radar написан на Rust + Tauri v2, а не на Electron. Весь интерфейс — нативный WebView2, а не браузерная прослойка. Итоговый .exe ~19 МБ (debug-сборка, release будет меньше) против 100+ МБ у Electron-аналогов.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Download -->
+  <div class="download-section reveal">
+    <h2>Скачать</h2>
+    <p class="sub">Windows 10/11, 64-bit. Просто скачать и запустить.</p>
+    <div class="buttons">
+      <a class="btn btn-primary" href="https://github.com/IlyaSigma111/vk-radar-releases/releases/latest/download/radar.exe" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Скачать .exe
+      </a>
+      
+      <a class="btn btn-secondary" href="https://github.com/IlyaSigma111/vk-radar-releases/releases/latest/download/VK.Radar_1.0.4_x64-setup.exe" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Скачать установщик
+      </a>
+      <a class="btn btn-secondary" href="https://github.com/IlyaSigma111/vk-radar-releases/releases/latest">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Все версии
+      </a>
+    </div>
+    <div class="version-info">
+      <a href="https://github.com/IlyaSigma111/vk-radar-releases/releases/tag/v1.0.4">Что нового в v1.0.4</a>
+    </div>
+  </div>
 
   <footer>
-    <div class="container">
-      VK Radar v1.0.0 &middot; <a href="https://github.com/IlyaSigma111/Radar">GitHub</a>
-    </div>
+    <p>VK Radar — парсер ВКонтакте. Rust + Tauri v2.</p>
+    <p style="margin-top:4px;color:#5a7a90">Автор: Гульков Илья</p>
+    <p style="margin-top:4px"><a href="https://github.com/IlyaSigma111/vk-radar-releases">GitHub</a></p>
   </footer>
+</div>
+</div>
 
+<script>
+// Particles
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<24;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.left=((i*47+13)%100)+'%';
+    p.style.animationDelay=((i*0.8)%8)+'s';
+    p.style.animationDuration=(8+(i%6))+'s';
+    c.appendChild(p);
+  }
+})();
+
+// Intro cutscene
+const intro=document.getElementById('intro');
+const mainContent=document.getElementById('mainContent');
+const skipBtn=document.getElementById('skipIntro');
+let introDone=false;
+
+function dismissIntro(){
+  if(introDone)return;
+  introDone=true;
+  intro.classList.add('hidden');
+  mainContent.classList.add('visible');
+  // Trigger scroll reveal
+  document.querySelectorAll('.reveal').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('visible'),100+i*100);
+  });
+}
+
+// Auto-dismiss after animation
+setTimeout(dismissIntro,3200);
+
+// Skip button
+skipBtn.addEventListener('click',dismissIntro);
+
+// Scroll reveal for new sections
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+},{threshold:0.1});
+
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// FAQ accordion
+document.querySelectorAll('.faq-q').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const item=btn.parentElement;
+    const wasOpen=item.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.faq-item.open').forEach(i=>i.classList.remove('open'));
+    // Toggle this
+    if(!wasOpen)item.classList.add('open');
+  });
+});
+</script>
 </body>
 </html>
