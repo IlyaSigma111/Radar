@@ -36,11 +36,12 @@ Section "VK Radar" SecMain
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
   
-  ; Create shortcuts
+  ; Create shortcuts (VBS = no console window)
   CreateDirectory "$SMPROGRAMS\VK Radar"
-  CreateShortCut "$SMPROGRAMS\VK Radar\VK Radar.lnk" "$INSTDIR\VK Radar.bat" "" "$INSTDIR\bin\node.exe"
+  CreateShortCut "$SMPROGRAMS\VK Radar\VK Radar.lnk" "wscript.exe" '"$INSTDIR\VK Radar.vbs"' "$INSTDIR\VK Radar.vbs"
+  CreateShortCut "$SMPROGRAMS\VK Radar\Stop VK Radar.lnk" "wscript.exe" '"$INSTDIR\Stop VK Radar.vbs"' "$INSTDIR\Stop VK Radar.vbs"
   CreateShortCut "$SMPROGRAMS\VK Radar\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-  CreateShortCut "$DESKTOP\VK Radar.lnk" "$INSTDIR\VK Radar.bat" "" "$INSTDIR\bin\node.exe"
+  CreateShortCut "$DESKTOP\VK Radar.lnk" "wscript.exe" '"$INSTDIR\VK Radar.vbs"' "$INSTDIR\VK Radar.vbs"
   
   ; Registry
   WriteRegStr HKCU "Software\VK-Radar" "InstallDir" "$INSTDIR"
@@ -52,9 +53,14 @@ Section "VK Radar" SecMain
 SectionEnd
 
 Section "Uninstall"
+  ; Stop running processes
+  nsExec::Exec 'taskkill /f /im node.exe /fi "WINDOWTITLE eq *test-scanner*"'
+  nsExec::Exec 'taskkill /f /im node.exe /fi "WINDOWTITLE eq *next*"'
+  
   RMDir /r "$INSTDIR"
   
   Delete "$SMPROGRAMS\VK Radar\VK Radar.lnk"
+  Delete "$SMPROGRAMS\VK Radar\Stop VK Radar.lnk"
   Delete "$SMPROGRAMS\VK Radar\Uninstall.lnk"
   RMDir "$SMPROGRAMS\VK Radar"
   Delete "$DESKTOP\VK Radar.lnk"
